@@ -2,29 +2,114 @@
 
 <html>
   <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="options.css"/>
+    <meta charset="utf-8" />
+    <title>Iwara Source Downloader</title>
+    <link rel="stylesheet" href="options.css" />
   </head>
 
   <body>
-
     <section class="save-options">
-      <div class="title" >保存時のファイル名の形式を指定</div>
+      <div class="title" data-locale="option_title">設定</div>
 
-      <label><input type="radio" id="type1" name="filename"/>username - title</label>
-      <label><input type="radio" id="type2" name="filename"/>[username] title</label>
-      <label><input type="radio" id="type3" name="filename"/>title</label>
+      <div>
+        <h2>auto like</h2>
+        <input type="checkbox" id="auto_like">
+        <label for="auto_like" data-locale="autolike_description">ダウンロードと同時にLikeボタンを押す</label>
 
-      <br />
+        <h2 data-locale="filename_setting">ファイル名の設定（書式設定可）</h2>
+        <p data-locale="filename_setting_description1">保存時のファイル名を設定します</p>
+        <p>ex: ?username? - ?title? → username - title </p>
+        <p>ex: [?username?] ?title? → [username] title </p>
+        <p>ex: ?title? → title</p>
+        <p>ex: ?title?_?year??month??day? → title_20230101</p>
+        <input type="text" id="filename_definition" value="">
 
-      <div class="title" >保存時のファイル名の末尾に投稿日時を追加する</div>
-      <label><input type="checkbox" id="posted_date" name="posted_date"/></label>
+        <h2 data-locale="save_location">保存先フォルダの設定（書式設定可）</h2>
+        <p data-locale="savelocation_description1" style="margin:1rem 0px 0px 0px;">Firefoxに設定されているダウンロードフォルダ<strong>以降のパス</strong>を設定できます</p>
+        <p data-locale="savelocation_description2" style="margin:0;">Firefoxに設定されているダウンロードフォルダは、ブラウザで「about:preferences#general」を開いて確認できる「次のフォルダーに保存する(V)」の値です</p>
+        <p data-locale="savelocation_description3" style="margin:1rem 0px 0px 0px;">例えば、「次のフォルダーに保存する(V)」が「P:\iwara」で、設定したパスが「iwarasourcedownloader/?username?/」の場合、保存される場所は「P:\iwara\iwarasourcedownloader\?username?\filename.mp4」になります</p>
+        <p data-locale="savelocation_description4" style="margin:1rem 0px 0px 0px;">フォルダ間の区切り文字には半角スラッシュ「/」を使用してください</p>
+        <p data-locale="savelocation_description5" style="margin:0px 0px 1rem 0px;"><strong>後方への参照「../」およびカレントの参照「./」は使用できません</strong></p>
+        <input type="text" id="save_location" value="" placeholder="iwarasourcedownloader/?username?/">
+        <p></p>
+        <input type="checkbox" id="auto_down">
+        <label for="auto_down" data-locale="autodown_description">保存先フォルダが設定されているとき、ファイルの保存場所を選択するダイアログを表示しないですぐダウンロードする</label>
+
+        <h2 data-locale="save">保存</h2>
+        <input type="button" value="設定を保存" id="save-button" />
+        <output id="status"></output>
+
+        <h3 data-locale="format_list">書式一覧表</h3>
+        <table>
+          <thead>
+            <tr>
+              <th data-locale="format_list_header1">書式</th>
+              <th data-locale="format_list_header2">説明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>?title?</td>
+              <td data-locale="format_title">動画のタイトル</td>
+            </tr>
+            <tr>
+              <td>?username?</td>
+              <td data-locale="format_username">動画を投稿したユーザーの名前</td>
+            </tr>
+            <tr>
+              <td>?year?</td>
+              <td data-locale="format_year">アップロードされた年（西暦）</td>
+            </tr>
+            <tr>
+              <td>?month?</td>
+              <td data-locale="format_month">アップロードされた月（01~12）</td>
+            </tr>
+            <tr>
+              <td>?day?</td>
+              <td data-locale="format_day">アップロードされた日（01~31）</td>
+            </tr>
+            <tr>
+              <td>?video-id?</td>
+              <td data-locale="format_video_id">Iwara.tv上の動画ID</td>
+            </tr>
+            <tr>
+              <td>?user-id?</td>
+              <td data-locale="format_user_id">ユーザー名の下に表示されている@以降のID</td>
+            </tr>
+            <tr>
+              <td>?like?</td>
+              <td data-locale="format_like">Iwara.tv上の保存時点のLike数</td>
+            </tr>
+            <tr>
+              <td>?view?</td>
+              <td data-locale="format_view">Iwara.tv上の保存時点のView数</td>
+            </tr>
+            <tr>
+              <td>?saved-year?</td>
+              <td data-locale="format_saved_year">保存時点の年（西暦）</td>
+            </tr>
+            <tr>
+              <td>?saved-month?</td>
+              <td data-locale="format_saved_month">保存時点の月（01~12）</td>
+            </tr>
+            <tr>
+              <td>?saved-day?</td>
+              <td data-locale="format_saved_day">保存時点の日（01~31）</td>
+            </tr>
+            <tr>
+              <td>?saved-hour?</td>
+              <td data-locale="format_saved_hour">保存時点の時間（時間：00~23）</td>
+            </tr>
+            <tr>
+              <td>?saved-minute?</td>
+              <td data-locale="format_saved_minute">保存時点の時間（分：00~59）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
     </section>
 
-    <input type="button" value="設定を保存" id="save-button"/>
-
     <script src="options.js"></script>
   </body>
-
 </html>

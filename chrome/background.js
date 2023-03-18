@@ -1,74 +1,151 @@
-/*
-アイコンがクリックされたときにdown.jsへメッセージを送信する
-*/
-chrome.pageAction.onClicked.addListener((tab) => {
-  chrome.tabs.sendMessage(tab.id, {"download": "run"});
-});
+'use strict';
+{
 
-/*
-down.jsから動画情報を受け取ってダウンロードを開始する
-*/
-chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
+  /**
+   * HTMLアンエスケープ
+   *
+   * @param {String} str 変換したい文字列
+   */
+    let unEscapeHTML = (str) => {
+      return str
+        .replace(/(&lt;)/g, '<')
+        .replace(/(&gt;)/g, '>')
+        .replace(/(&quot;)/g, '"')
+        .replace(/(&#39;)/g, "'")
+        .replace(/(&amp;)/g, '&');
+    };
 
-    chrome.storage.local.get(["filename","posted_date"],((settings)=>{
+  /**
+   * 使用できない文字を全角に置き換え
+   * ¥　/　:　*　?　"　<　>　| tab
+   * chromeのみ
+   * 半角チルダを全角チルダへ変換
+   * 半角ピリオドを全角ピリオドへ変換
+   */
+  let convertSafeFileName = (titleOrUsername) => {
+    return unEscapeHTML(titleOrUsername)
+      .replace(/\\/g,'￥')
+      .replace(/\//g,'／')
+      .replace(/:/g,'：')
+      .replace(/\*/g,'＊')
+      .replace(/\?/g,'？')
+      .replace(/"/g,'”')
+      .replace(/</g,'＜')
+      .replace(/>/g,'＞')
+      .replace(/\|/g,'｜')
+      .replace(/\t/g, '　')
+      .replace(/~/g,'～')
+      .replace(/\./g,'．');
+  }
 
-      var filename = request.username + ' - ' + request.title;
-      if (typeof settings.filename !== "undefined") {
-        if(settings.filename.indexOf("type1") != -1){
-          filename = request.username + ' - ' + request.title;
-        } else if(settings.filename.indexOf("type2") != -1) {
-          filename = '['+request.username+'] ' + request.title;
-        } else {
-          filename = request.title;
-        }
-      }
+  /**
+   * ゼロパディングした日時を取得
+   *
+   * @param {Date} d 日付
+   */
+  let getDate = (d) => {
+    return {
+      'year': d.getFullYear().toString().padStart(4, '0'),
+      'month': (d.getMonth()+1).toString().padStart(2, '0'),
+      'day': d.getDate().toString().padStart(2, '0'),
+      'hour': d.getHours().toString().padStart(2, '0'),
+      'minute': d.getMinutes().toString().padStart(2, '0'),
+    }
+  };
 
-      if(typeof settings.posted_date !== "undefined"){
-        if(settings.posted_date){
-          filename += "_" + request.posted_date;
-        }
-      }
+  let executeDownload = (info) => {
+    chrome.storage.local.get({
+      filename_definition: '?username? - ?title?',
+      download_mode: '1',
+      save_location: ''
+    },(settings)=>{
+      let saved_dates = getDate(new Date());
+      let filename = settings.filename_definition
+        .replace(/\?title\?/g, info.title)
+        .replace(/\?username\?/g, info.username)
+        .replace(/\?year\?/g, info.year)
+        .replace(/\?month\?/g, info.month)
+        .replace(/\?day\?/g, info.day)
+        .replace(/\?like\?/g, info.like)
+        .replace(/\?view\?/g, info.view)
+        .replace(/\?saved-year\?/g, saved_dates.year)
+        .replace(/\?saved-month\?/g, saved_dates.month)
+        .replace(/\?saved-day\?/g, saved_dates.day)
+        .replace(/\?saved-hour\?/g, saved_dates.hour)
+        .replace(/\?saved-minute\?/g, saved_dates.minute)
+        .replace(/\?video-id\?/g, info.video_id)
+        .replace(/\?user-id\?/g, info.user_id)
+      filename = convertSafeFileName(filename)
       filename += '.mp4';
-      
-      var splited = request.source_url.split("_");
-      var prefix = splited[splited.length-1].split(".mp4")[0];
-      filename = '('+ prefix +')' + filename;
-
-      function onStartedDownload(id) {
-        //console.log("Started to download: "+id);
+      if(info.source_url.indexOf("_360") != -1){
+        filename = '(360)' + filename;
+      }else if(info.source_url.indexOf("_540") != -1){
+        filename = '(540)' + filename;
+      }else{
+        filename = '(Source)' + filename;
       }
 
-      function onFailed(error) {
-        //console.log("Something stinks: "+error);
+      if(settings.save_location.length != 0){
+        let save_location = settings.save_location
+          .replace(/\?title\?/g, info.title)
+          .replace(/\?username\?/g, info.username)
+          .replace(/\?year\?/g, info.year)
+          .replace(/\?month\?/g, info.month)
+          .replace(/\?day\?/g, info.day)
+          .replace(/\?like\?/g, info.like)
+          .replace(/\?view\?/g, info.view)
+          .replace(/\?saved-year\?/g, saved_dates.year)
+          .replace(/\?saved-month\?/g, saved_dates.month)
+          .replace(/\?saved-day\?/g, saved_dates.day)
+          .replace(/\?saved-hour\?/g, saved_dates.hour)
+          .replace(/\?saved-minute\?/g, saved_dates.minute)
+          .replace(/\?video-id\?/g, info.video_id)
+          .replace(/\?user-id\?/g, info.user_id)
+          .replace(/\//g, '__delimiter__')
+        save_location = convertSafeFileName(save_location)
+        save_location = save_location.replace(/__delimiter__/g, "/")
+        if(save_location.slice(0,1) == "/"){
+          save_location = save_location.slice(1)
+        }
+        if(save_location.slice(-1) != "/"){
+          save_location += "/"
+        }
+        filename = save_location + filename
       }
 
-      var startDownload = chrome.downloads.download({
-        url : request.source_url,
+      if(settings.download_mode == "2"){
+        let listener = (downloadItem, callback) => {
+          callback({filename: filename})
+          chrome.downloads.onDeterminingFilename.removeListener(listener)
+        }
+        chrome.downloads.onDeterminingFilename.addListener(listener)
+      }
+
+      chrome.downloads.download({
+        url : info.source_url,
         filename: filename,
         conflictAction : 'prompt',
-        saveAs : true
-      });
-
-      //startDownload.then(onStartedDownload, onFailed);
-    }));
-});
-
-/* エラーログ */
-function onError(e) {
-  console.error(e);
-}
-
-/*
-タブのURLにiwara.tv/videos/があればアイコンを表示
-*/
-function checkForValidUrl(tabId, changeInfo, tab) {
-  if (tab.url.indexOf("iwara.tv/videos/") > -1) {
-    chrome.pageAction.show(tabId);
+        // saveAs : true
+      },function(id){});
+    });
   }
-}
 
-/*
-タブの更新を捕捉
-*/
-chrome.tabs.onUpdated.addListener(checkForValidUrl);
+  /**
+   * アイコンがクリックされたときにdown.jsへメッセージを送信する
+   */
+  chrome.action.onClicked.addListener((tab) => {
+    if (tab.url.indexOf("iwara.tv") > -1) {
+      chrome.tabs.sendMessage(tab.id, {"current_url": tab.url});
+    }
+  });
+
+  /**
+   * down.jsから動画情報を受け取ってダウンロードを開始する
+   */
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    executeDownload(request);
+    sendResponse({});
+    return true;
+  });
+
+}

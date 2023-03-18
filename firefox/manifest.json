@@ -1,8 +1,9 @@
 {
   "manifest_version": 2,
   "name": "Iwara 360p Downloader",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "description": "Iwara 360p Downloader",
+  "default_locale": "ja",
   "icons": {
     "48": "icons/icon-48.png"
   },
@@ -23,7 +24,7 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.iwara.tv/videos/*"
+        "*://*.iwara.tv/video/*"
       ],
       "js": [
         "content_scripts/down.js"
