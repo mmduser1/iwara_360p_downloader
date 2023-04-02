@@ -22,7 +22,7 @@
       auto_like: false
     },(settings)=>{
       if(settings.auto_like){
-        let like_button = document.querySelector(".page-video__actions").querySelector(".text").innerText.trim()
+        let like_button = document.querySelector(".page-video__actions").querySelector(".text")
         if(typeof like_button !== "undefined" && !(like_button.textContent.indexOf("いいねを解除") > -1)){
           like_button.click();
         }
