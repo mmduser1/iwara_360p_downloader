@@ -11,7 +11,7 @@
     let title = document.querySelector(".page-video__details").querySelector(".text").textContent
     let username = document.querySelector(".page-video__byline__info").querySelector(".text").innerText
     let user_id = document.querySelector(".page-video__byline__info").querySelector(".text--muted").innerText.slice(1)
-    let video_id = source_url.split(/%5D|%5B/)[1];
+    let video_id = location.href.split("video/")[1].split("/")[0];
     let like = document.querySelector(".page-video__stats").querySelectorAll(".text")[0].innerText.trim()
     let view = document.querySelector(".page-video__stats").querySelectorAll(".text")[1].innerText.trim()
     let year = document.querySelector("#vjs_video_3_html5_api").src.match(/(\d{4})%2F(\d{2})%2F(\d{2})/)[1]
